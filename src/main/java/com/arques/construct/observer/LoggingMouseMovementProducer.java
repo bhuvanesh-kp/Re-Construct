@@ -17,8 +17,8 @@ public class LoggingMouseMovementProducer implements MouseMovementProducer {
 			return;
 		}
 
-		MouseMovementEvent first = events.get(0);
-		MouseMovementEvent last = events.get(events.size() - 1);
+		MouseMovementEvent first = events.getFirst();
+		MouseMovementEvent last = events.getLast();
 		log.info(
 				"Captured {} mouse movement event(s) for session {} from sequence {} to {}",
 				events.size(),
