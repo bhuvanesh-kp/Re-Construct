@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<title>Mouse Movement Observer</title>
+	<link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+	<main class="observer-shell">
+		<section class="capture-panel" aria-labelledby="page-title">
+			<div class="title-row">
+				<div>
+					<p class="eyebrow">Kafka producer preview</p>
+					<h1 id="page-title">Mouse Movement Observer</h1>
+				</div>
+				<div class="status-pill" id="capture-status">Paused</div>
+			</div>
+
+			<div class="tracker-surface" id="tracker-surface">
+				<canvas id="trail-canvas" aria-label="Mouse movement trail"></canvas>
+				<div class="crosshair" id="crosshair" aria-hidden="true"></div>
+				<div class="surface-copy">
+					<strong>Move inside this area</strong>
+					<span>Events are buffered and posted to the producer endpoint.</span>
+				</div>
+			</div>
+
+			<div class="controls" aria-label="Capture controls">
+				<button type="button" id="toggle-capture">Start capture</button>
+				<button type="button" id="flush-events">Flush now</button>
+				<button type="button" id="clear-events">Clear</button>
+			</div>
+		</section>
+
+		<aside class="metrics-panel" aria-label="Capture metrics">
+			<div class="metric">
+				<span>Session</span>
+				<strong id="session-id">-</strong>
+			</div>
+			<div class="metric-grid">
+				<div class="metric">
+					<span>Captured</span>
+					<strong id="captured-count">0</strong>
+				</div>
+				<div class="metric">
+					<span>Buffered</span>
+					<strong id="buffered-count">0</strong>
+				</div>
+				<div class="metric">
+					<span>Last X</span>
+					<strong id="last-x">-</strong>
+				</div>
+				<div class="metric">
+					<span>Last Y</span>
+					<strong id="last-y">-</strong>
+				</div>
+			</div>
+			<div class="event-log" aria-label="Recent events">
+				<div class="log-heading">
+					<span>Recent events</span>
+					<span id="producer-state">producer: waiting</span>
+				</div>
+				<ol id="event-list"></ol>
+			</div>
+		</aside>
+	</main>
+
+	<script src="/observer.js"></script>
+</body>
+</html>
