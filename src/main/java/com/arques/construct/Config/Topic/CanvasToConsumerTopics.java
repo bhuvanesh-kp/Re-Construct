@@ -6,11 +6,19 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.kafka.config.TopicBuilder;
 
 @Configuration
-public class Topic1 {
+public class CanvasToConsumerTopics {
 
     @Bean
-    public NewTopic NewTopic(){
-        return TopicBuilder.name("topic1")
+    public NewTopic NewTopicDrawCapture(){
+        return TopicBuilder.name(String.valueOf(Topics.DrawEvent))
+                .partitions(1)
+                .replicas(1)
+                .build();
+    }
+
+    @Bean
+    public NewTopic NewTopicCaptureTravel(){
+        return TopicBuilder.name(String.valueOf(Topics.TravelEvent))
                 .partitions(1)
                 .replicas(1)
                 .build();

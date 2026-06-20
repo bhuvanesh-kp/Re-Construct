@@ -10,9 +10,21 @@ import org.springframework.stereotype.Component;
 public class KafkaConsumer {
     private static final Logger log = LoggerFactory.getLogger(KafkaConsumer.class);
 
-    @KafkaListener(id = "test1", topics = "topic1")
-    public void Listener(MouseMovementEvent event){
-        log.info("messages received : {} ", event.toString());
-        System.out.println(event);
+    private final ReconstructionEventStore eventStore;
+
+    public KafkaConsumer(ReconstructionEventStore eventStore) {
+        this.eventStore = eventStore;
+    }
+
+    @KafkaListener(id = "draw-listener", groupId = "test1", topics = "DrawEvent")
+    public void listener(MouseMovementEvent event) {
+        eventStore.add(event);
+        log.info("messages received for DrawEvent: {}", event);
+    }
+
+    @KafkaListener(id = "travel-listener", groupId = "test1", topics = "TravelEvent")
+    public void travelListener(MouseMovementEvent event) {
+        eventStore.add(event);
+        log.info("messages received for TravelEvent: {} {}", event.x(), event.y());
     }
 }

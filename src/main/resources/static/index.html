@@ -14,7 +14,7 @@
 					<p class="eyebrow">Kafka producer preview</p>
 					<h1 id="page-title">Mouse Movement Observer</h1>
 				</div>
-				<div class="status-pill" id="capture-status">Paused</div>
+				<div class="status-pill" id="capture-status">TRAVEL</div>
 			</div>
 
 			<div class="tracker-surface" id="tracker-surface">
@@ -22,17 +22,31 @@
 				<div class="crosshair" id="crosshair" aria-hidden="true"></div>
 				<div class="surface-copy">
 					<strong>Move inside this area</strong>
-					<span>Events are buffered and posted to the producer endpoint.</span>
+					<span>All movement is sent. Caps Lock on marks events as DRAW; off marks them as TRAVEL.</span>
 				</div>
 			</div>
 
 			<div class="controls" aria-label="Capture controls">
-				<button type="button" id="toggle-capture">Start capture</button>
 				<button type="button" id="flush-events">Flush now</button>
 				<button type="button" id="clear-events">Clear</button>
 			</div>
 		</section>
 
+		<section class="reconstruction-panel" aria-labelledby="reconstruction-title">
+			<div class="title-row">
+				<div>
+					<p class="eyebrow">Kafka consumer reconstruction</p>
+					<h2 id="reconstruction-title">Reconstruction Canvas</h2>
+				</div>
+				<div class="legend" aria-label="Reconstruction legend">
+					<span><i class="legend-draw"></i>DRAW</span>
+					<span><i class="legend-travel"></i>TRAVEL</span>
+				</div>
+			</div>
+			<div class="reconstruction-surface">
+				<canvas id="reconstruction-canvas" aria-label="Consumed movement reconstruction"></canvas>
+			</div>
+		</section>
 		<aside class="metrics-panel" aria-label="Capture metrics">
 			<div class="metric">
 				<span>Session</span>

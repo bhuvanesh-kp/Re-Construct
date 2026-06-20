@@ -31,7 +31,17 @@ public class LoggingMouseMovementProducer implements MouseMovementProducer {
 		);
 
 		for(MouseMovementEvent event : events) {
-			kafkaTemplate.send("topic1", event);
+			switch (event.state()){
+				case DRAW ->  {
+					kafkaTemplate.send("DrawEvent", event);
+				}
+				case TRAVEL -> {
+					kafkaTemplate.send("TravelEvent", event);
+				}
+				default -> {
+					log.error("Unhandled state has occurred: {}", event.state());
+				}
+			}
 		}
 
 	}

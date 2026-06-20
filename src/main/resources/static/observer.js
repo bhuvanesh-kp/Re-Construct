@@ -1,5 +1,6 @@
 (function () {
 	const endpoint = "/api/mouse-movements";
+	const reconstructionEndpoint = "/api/reconstruction/events";
 	const flushIntervalMs = 1000;
 	const sampleIntervalMs = 45;
 	const maxBatchSize = 40;
@@ -9,7 +10,6 @@
 	const canvas = document.getElementById("trail-canvas");
 	const context = canvas.getContext("2d");
 	const crosshair = document.getElementById("crosshair");
-	const toggleButton = document.getElementById("toggle-capture");
 	const flushButton = document.getElementById("flush-events");
 	const clearButton = document.getElementById("clear-events");
 	const captureStatus = document.getElementById("capture-status");
@@ -20,24 +20,35 @@
 	const lastYOutput = document.getElementById("last-y");
 	const producerState = document.getElementById("producer-state");
 	const eventList = document.getElementById("event-list");
+	const reconstructionCanvas = document.getElementById("reconstruction-canvas");
+	const reconstructionContext = reconstructionCanvas.getContext("2d");
 
 	const sessionId = getSessionId();
-	let capturing = false;
+	let capsLockOn = false;
 	let buffer = [];
 	let capturedCount = 0;
 	let sequence = 0;
 	let lastSampledAt = 0;
 	let flushTimer = window.setInterval(flushEvents, flushIntervalMs);
 	let lastPoint = null;
+	let reconstructionEvents = [];
 
 	sessionIdOutput.textContent = sessionId;
 	resizeCanvas();
+	resizeReconstructionCanvas();
 	updateStatus();
+	refreshReconstruction();
+	window.setInterval(refreshReconstruction, 1000);
 
-	window.addEventListener("resize", resizeCanvas);
+	window.addEventListener("resize", function () {
+		resizeCanvas();
+		resizeReconstructionCanvas();
+		drawReconstruction();
+	});
 	surface.addEventListener("mousemove", captureMouseMove);
 	surface.addEventListener("mouseleave", hideCrosshair);
-	toggleButton.addEventListener("click", toggleCapture);
+	window.addEventListener("keydown", updateCapsLockState);
+	window.addEventListener("keyup", updateCapsLockState);
 	flushButton.addEventListener("click", flushEvents);
 	clearButton.addEventListener("click", clearEvents);
 	window.addEventListener("pagehide", sendRemainingEvents);
@@ -55,29 +66,42 @@
 		return next;
 	}
 
-	function toggleCapture() {
-		capturing = !capturing;
+	function updateStatus() {
+		captureStatus.textContent = capsLockOn ? "DRAW" : "TRAVEL";
+		captureStatus.classList.toggle("active", capsLockOn);
+	}
+
+	function updateCapsLockState(event) {
+		if (typeof event.getModifierState !== "function") {
+			return;
+		}
+
+		const nextCapsLockOn = event.getModifierState("CapsLock");
+		if (capsLockOn === nextCapsLockOn) {
+			return;
+		}
+
+		capsLockOn = nextCapsLockOn;
+		if (!capsLockOn) {
+			lastPoint = null;
+		}
 		updateStatus();
 	}
 
-	function updateStatus() {
-		captureStatus.textContent = capturing ? "Capturing" : "Paused";
-		captureStatus.classList.toggle("active", capturing);
-		toggleButton.textContent = capturing ? "Pause capture" : "Start capture";
-	}
-
 	function captureMouseMove(event) {
+		updateCapsLockState(event);
+
 		const bounds = surface.getBoundingClientRect();
 		const x = Math.max(0, Math.min(bounds.width, event.clientX - bounds.left));
 		const y = Math.max(0, Math.min(bounds.height, event.clientY - bounds.top));
+		const state = capsLockOn ? "DRAW" : "TRAVEL";
 
 		crosshair.style.left = x + "px";
 		crosshair.style.top = y + "px";
 		crosshair.classList.add("active");
-		drawTrail(x, y);
 
-		if (!capturing) {
-			return;
+		if (capsLockOn) {
+			drawTrail(x, y);
 		}
 
 		const now = Date.now();
@@ -95,7 +119,8 @@
 			viewportWidth: Math.round(bounds.width),
 			viewportHeight: Math.round(bounds.height),
 			path: window.location.pathname,
-			eventType: "mousemove"
+			eventType: "mousemove",
+			state
 		};
 
 		buffer.push(movement);
@@ -142,7 +167,7 @@
 
 	function addRecentEvent(event) {
 		const item = document.createElement("li");
-		item.textContent = "#" + event.sequence + " x:" + event.x + " y:" + event.y;
+		item.textContent = "#" + event.sequence + " [" + event.state + "] x:" + event.x + " y:" + event.y;
 		eventList.prepend(item);
 
 		while (eventList.children.length > maxRecentEvents) {
@@ -209,6 +234,83 @@
 		lastXOutput.textContent = "-";
 		lastYOutput.textContent = "-";
 		producerState.textContent = "producer: waiting";
+		clearReconstruction();
+	}
+
+	async function refreshReconstruction() {
+		try {
+			const response = await fetch(reconstructionEndpoint);
+			if (!response.ok) {
+				throw new Error("HTTP " + response.status);
+			}
+
+			reconstructionEvents = await response.json();
+			drawReconstruction();
+		} catch (error) {
+			producerState.textContent = "consumer: reconstruction unavailable";
+		}
+	}
+
+	function clearReconstruction() {
+		reconstructionEvents = [];
+		drawReconstruction();
+		fetch(reconstructionEndpoint, { method: "DELETE" }).catch(function () {});
+	}
+
+	function resizeReconstructionCanvas() {
+		const bounds = reconstructionCanvas.getBoundingClientRect();
+		const ratio = window.devicePixelRatio || 1;
+		reconstructionCanvas.width = Math.floor(bounds.width * ratio);
+		reconstructionCanvas.height = Math.floor(bounds.height * ratio);
+		reconstructionContext.setTransform(ratio, 0, 0, ratio, 0, 0);
+	}
+
+	function drawReconstruction() {
+		const bounds = reconstructionCanvas.getBoundingClientRect();
+		reconstructionContext.clearRect(0, 0, bounds.width, bounds.height);
+
+		let previous = null;
+		for (const event of reconstructionEvents) {
+			const point = normalizeReconstructionPoint(event, bounds);
+			drawReconstructionPoint(point, event.state);
+
+			if (previous && previous.sessionId === event.sessionId) {
+				drawReconstructionSegment(previous.point, point, event.state);
+			}
+
+			previous = { sessionId: event.sessionId, point };
+		}
+	}
+
+	function normalizeReconstructionPoint(event, bounds) {
+		const sourceWidth = event.viewportWidth || bounds.width || 1;
+		const sourceHeight = event.viewportHeight || bounds.height || 1;
+
+		return {
+			x: Math.max(0, Math.min(bounds.width, event.x / sourceWidth * bounds.width)),
+			y: Math.max(0, Math.min(bounds.height, event.y / sourceHeight * bounds.height))
+		};
+	}
+
+	function drawReconstructionSegment(from, to, state) {
+		reconstructionContext.save();
+		reconstructionContext.lineCap = "round";
+		reconstructionContext.lineJoin = "round";
+		reconstructionContext.lineWidth = state === "DRAW" ? 4 : 2;
+		reconstructionContext.strokeStyle = state === "DRAW" ? "rgba(91, 91, 214, 0.9)" : "rgba(183, 121, 31, 0.85)";
+		reconstructionContext.setLineDash(state === "DRAW" ? [] : [8, 8]);
+		reconstructionContext.beginPath();
+		reconstructionContext.moveTo(from.x, from.y);
+		reconstructionContext.lineTo(to.x, to.y);
+		reconstructionContext.stroke();
+		reconstructionContext.restore();
+	}
+
+	function drawReconstructionPoint(point, state) {
+		reconstructionContext.fillStyle = state === "DRAW" ? "rgba(91, 91, 214, 0.95)" : "rgba(183, 121, 31, 0.75)";
+		reconstructionContext.beginPath();
+		reconstructionContext.arc(point.x, point.y, state === "DRAW" ? 3 : 2, 0, Math.PI * 2);
+		reconstructionContext.fill();
 	}
 
 	function resizeCanvas() {
