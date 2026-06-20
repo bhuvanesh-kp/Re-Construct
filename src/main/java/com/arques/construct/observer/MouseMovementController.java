@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/api/mouse-movements")
 public class MouseMovementController {
 
-	private static final int MAX_BATCH_SIZE = 500;
+	private static final int MAX_BATCH_SIZE = 5;
 
 	private final MouseMovementProducer producer;
 
@@ -30,7 +30,6 @@ public class MouseMovementController {
 
 		producer.publish(events);
 
-		return ResponseEntity.accepted()
-				.body(new MouseMovementCaptureResponse(events.size(), producer.name()));
+		return ResponseEntity.accepted().body(new MouseMovementCaptureResponse(events.size(), producer.name()));
 	}
 }
