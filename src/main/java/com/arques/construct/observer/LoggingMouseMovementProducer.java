@@ -11,7 +11,6 @@ import org.springframework.stereotype.Service;
 @Service
 @RequiredArgsConstructor
 public class LoggingMouseMovementProducer implements MouseMovementProducer {
-
 	private static final Logger log = LoggerFactory.getLogger(LoggingMouseMovementProducer.class);
 	private final KafkaTemplate<String, MouseMovementEvent> kafkaTemplate;
 
@@ -28,7 +27,8 @@ public class LoggingMouseMovementProducer implements MouseMovementProducer {
 				events.size(),
 				first.sessionId(),
 				first.sequence(),
-				last.sequence());
+				last.sequence()
+		);
 
 		for(MouseMovementEvent event : events) {
 			kafkaTemplate.send("topic1", event);

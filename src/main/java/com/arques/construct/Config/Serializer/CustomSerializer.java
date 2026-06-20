@@ -1,4 +1,4 @@
-package com.arques.construct.Config.Serializer;
+package com.arques.construct.config.Serializer;
 
 import com.arques.construct.observer.MouseMovementEvent;
 import org.apache.kafka.common.errors.SerializationException;
