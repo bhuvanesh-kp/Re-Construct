@@ -9,7 +9,6 @@
 	const canvas = document.getElementById("trail-canvas");
 	const context = canvas.getContext("2d");
 	const crosshair = document.getElementById("crosshair");
-	const toggleButton = document.getElementById("toggle-capture");
 	const flushButton = document.getElementById("flush-events");
 	const clearButton = document.getElementById("clear-events");
 	const captureStatus = document.getElementById("capture-status");
@@ -22,7 +21,7 @@
 	const eventList = document.getElementById("event-list");
 
 	const sessionId = getSessionId();
-	let capturing = false;
+	let capsLockOn = false;
 	let buffer = [];
 	let capturedCount = 0;
 	let sequence = 0;
@@ -37,7 +36,8 @@
 	window.addEventListener("resize", resizeCanvas);
 	surface.addEventListener("mousemove", captureMouseMove);
 	surface.addEventListener("mouseleave", hideCrosshair);
-	toggleButton.addEventListener("click", toggleCapture);
+	window.addEventListener("keydown", updateCapsLockState);
+	window.addEventListener("keyup", updateCapsLockState);
 	flushButton.addEventListener("click", flushEvents);
 	clearButton.addEventListener("click", clearEvents);
 	window.addEventListener("pagehide", sendRemainingEvents);
@@ -55,29 +55,42 @@
 		return next;
 	}
 
-	function toggleCapture() {
-		capturing = !capturing;
+	function updateStatus() {
+		captureStatus.textContent = capsLockOn ? "DRAW" : "TRAVEL";
+		captureStatus.classList.toggle("active", capsLockOn);
+	}
+
+	function updateCapsLockState(event) {
+		if (typeof event.getModifierState !== "function") {
+			return;
+		}
+
+		const nextCapsLockOn = event.getModifierState("CapsLock");
+		if (capsLockOn === nextCapsLockOn) {
+			return;
+		}
+
+		capsLockOn = nextCapsLockOn;
+		if (!capsLockOn) {
+			lastPoint = null;
+		}
 		updateStatus();
 	}
 
-	function updateStatus() {
-		captureStatus.textContent = capturing ? "Capturing" : "Paused";
-		captureStatus.classList.toggle("active", capturing);
-		toggleButton.textContent = capturing ? "Pause capture" : "Start capture";
-	}
-
 	function captureMouseMove(event) {
+		updateCapsLockState(event);
+
 		const bounds = surface.getBoundingClientRect();
 		const x = Math.max(0, Math.min(bounds.width, event.clientX - bounds.left));
 		const y = Math.max(0, Math.min(bounds.height, event.clientY - bounds.top));
+		const state = capsLockOn ? "DRAW" : "TRAVEL";
 
 		crosshair.style.left = x + "px";
 		crosshair.style.top = y + "px";
 		crosshair.classList.add("active");
-		drawTrail(x, y);
 
-		if (!capturing) {
-			return;
+		if (capsLockOn) {
+			drawTrail(x, y);
 		}
 
 		const now = Date.now();
@@ -95,7 +108,8 @@
 			viewportWidth: Math.round(bounds.width),
 			viewportHeight: Math.round(bounds.height),
 			path: window.location.pathname,
-			eventType: "mousemove"
+			eventType: "mousemove",
+			state
 		};
 
 		buffer.push(movement);
@@ -107,7 +121,6 @@
 			flushEvents();
 		}
 	}
-
 	function drawTrail(x, y) {
 		context.lineCap = "round";
 		context.lineJoin = "round";
@@ -142,7 +155,7 @@
 
 	function addRecentEvent(event) {
 		const item = document.createElement("li");
-		item.textContent = "#" + event.sequence + " x:" + event.x + " y:" + event.y;
+		item.textContent = "#" + event.sequence + " [" + event.state + "] x:" + event.x + " y:" + event.y;
 		eventList.prepend(item);
 
 		while (eventList.children.length > maxRecentEvents) {

@@ -1,5 +1,7 @@
 package com.arques.construct.observer;
 
+import com.arques.construct.DTO.State.CanvasState;
+
 public record MouseMovementEvent(
 		String sessionId,
 		long occurredAt,
@@ -9,5 +11,6 @@ public record MouseMovementEvent(
 		double viewportWidth,
 		double viewportHeight,
 		String path,
-		String eventType) {
+		String eventType,
+		CanvasState state) {
 }
