@@ -12,8 +12,6 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/api/mouse-movements")
 public class MouseMovementController {
 
-	private static final int MAX_BATCH_SIZE = 5;
-
 	private final MouseMovementProducer producer;
 
 	MouseMovementController(MouseMovementProducer producer) {
@@ -24,9 +22,7 @@ public class MouseMovementController {
 	ResponseEntity<MouseMovementCaptureResponse> capture(@RequestBody(required = false) MouseMovementBatchRequest request) {
 		List<MouseMovementEvent> events = request == null || request.events() == null
 				? List.of()
-				: request.events().stream()
-						.limit(MAX_BATCH_SIZE)
-						.toList();
+				: request.events();
 
 		producer.publish(events);
 
