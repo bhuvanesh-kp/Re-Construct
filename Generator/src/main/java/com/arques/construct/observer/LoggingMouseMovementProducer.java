@@ -2,6 +2,7 @@ package com.arques.construct.observer;
 
 import java.util.List;
 
+import com.arques.construct.model.MouseMovementEvent;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

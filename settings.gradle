@@ -1,0 +1,3 @@
+rootProject.name = 'KafkaReconstruction'
+
+include 'Generator', 'Receiver'

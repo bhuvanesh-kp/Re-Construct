@@ -4,10 +4,9 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 @SpringBootApplication
-public class ConstructApplication {
+public class ReceiverApplication {
 
 	public static void main(String[] args) {
-		SpringApplication.run(ConstructApplication.class, args);
+		SpringApplication.run(ReceiverApplication.class, args);
 	}
-
 }

@@ -1,3 +1,6 @@
 spring:
   application:
-    name: Receiver
+    name: receiver
+
+server:
+  port: 2000

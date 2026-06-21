@@ -2,6 +2,7 @@ package com.arques.construct.observer;
 
 import java.util.List;
 
+import com.arques.construct.model.MouseMovementEvent;
 import org.springframework.http.ResponseEntity;
 import org.springframework.context.annotation.Profile;
 import org.springframework.web.bind.annotation.PostMapping;

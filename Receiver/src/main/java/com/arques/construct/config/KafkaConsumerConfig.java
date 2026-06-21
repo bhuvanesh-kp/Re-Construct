@@ -1,8 +1,7 @@
-package com.arques.construct.config.KafkaConsumer;
+package com.arques.construct.config;
 
 
-import com.arques.construct.config.Deserializer.CustomDeSerializer;
-import com.arques.construct.observer.MouseMovementEvent;
+import com.arques.construct.model.MouseMovementEvent;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.common.serialization.StringDeserializer;
 import org.springframework.context.annotation.Bean;

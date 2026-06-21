@@ -1,4 +1,4 @@
-package com.arques.construct.DTO.State;
+package com.arques.construct.model;
 
 public enum CanvasState {
     DRAW,

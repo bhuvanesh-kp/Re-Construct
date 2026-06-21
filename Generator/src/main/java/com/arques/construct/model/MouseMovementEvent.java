@@ -1,6 +1,4 @@
-package com.arques.construct.observer;
-
-import com.arques.construct.DTO.State.CanvasState;
+package com.arques.construct.model;
 
 public record MouseMovementEvent(
 		String sessionId,

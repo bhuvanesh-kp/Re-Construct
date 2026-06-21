@@ -1,9 +1,5 @@
 spring:
   application:
-    name: construct
-  profiles:
-    default: producer
-  main:
-    allow-bean-definition-overriding: true
+    name: generator
 server:
   port: 9871

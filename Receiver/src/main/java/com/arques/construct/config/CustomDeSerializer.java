@@ -1,6 +1,6 @@
-package com.arques.construct.config.Deserializer;
+package com.arques.construct.config;
 
-import com.arques.construct.observer.MouseMovementEvent;
+import com.arques.construct.model.MouseMovementEvent;
 import org.apache.kafka.common.errors.SerializationException;
 import org.apache.kafka.common.header.Headers;
 import org.apache.kafka.common.serialization.Deserializer;
