@@ -1,6 +1,9 @@
-.gradle/
+.gradle/*
 .idea/
 **/build/
 **/.gradle/
 **/.idea/
 *.iml
+.idea
+.agents
+.gradle/*
